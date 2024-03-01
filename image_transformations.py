@@ -12,11 +12,35 @@ import matplotlib.pyplot as plt
 # the output is the transformed image with the same shape (H, W, 3)
 #TODO: implementation this function
 def transform(im, T):
+    # Get the height and width of the image
+    height, width, channels = im.shape
 
+    # Create a grid of coordinates for the entire image
+    y, x = np.mgrid[0:height, 0:width]
+    coordinates = np.vstack((x.ravel(), y.ravel(), np.ones_like(x.ravel())))
 
-                
+    # Apply the inverse of the 2D transformation to the coordinates
+    T_inv = np.linalg.inv(T)
+    transformed_coordinates = T_inv @ coordinates
+
+    # Normalize the third coordinate to obtain the homogeneous coordinates
+    transformed_coordinates[:2, :] /= transformed_coordinates[2, :]
+
+    # Round the transformed coordinates to integers for indexing
+    transformed_coordinates = np.round(transformed_coordinates[:2, :]).astype(int)
+
+    # Clip the coordinates to stay within the image boundaries
+    transformed_coordinates[0, :] = np.clip(transformed_coordinates[0, :], 0, width - 1)
+    transformed_coordinates[1, :] = np.clip(transformed_coordinates[1, :], 0, height - 1)
+
+    # Reshape the coordinates back to the shape of the original image
+    transformed_coordinates = transformed_coordinates.reshape((2, height, width)).transpose(1, 2, 0)
+
+    # Use the transformed coordinates to create the new image
+    im_new = np.zeros_like(im)
+    im_new[coordinates[1, :].reshape(height, width), coordinates[0, :].reshape(height, width)] = im[transformed_coordinates[:,:,1], transformed_coordinates[:,:,0]]
+
     return im_new
-
 
 # main function
 # notice you cannot run this main function until you implement the above transform() function 
